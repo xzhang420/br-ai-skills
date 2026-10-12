@@ -8,6 +8,23 @@ own_skill_update_policy = "manual-confirm-before-commit-or-push"
 other_device_policy = "pull-shared-repo-only"
 
 [[skills]]
+name = "codex-image-prompting"
+local_path = "skills/codex-image-prompting"
+upstream_url = "https://github.com/pimenov/codex-image-prompting-skill"
+source_type = "github-subdir"
+upstream_subdir = "skills/codex-image-prompting"
+tracking = "default-branch-or-release"
+current_source = "main at 71ee09bb0c990664f793db387ecc4693ca767a97, downloaded 2026-10-12"
+
+preserve_rules = [
+  "Keep only the Codex skill subdirectory at skills/codex-image-prompting, including agents metadata and references.",
+  "Preserve the repository-root LICENSE and NOTICE.md inside skills/codex-image-prompting when syncing source files.",
+  "Do not import repository-level AGENTS.md, installation scripts, examples, or documentation assets.",
+  "Keep native Codex image generation as the execution path; do not install API wrappers, dependencies, or API keys during an upstream sync.",
+  "Run git diff --check after preparing any candidate update."
+]
+
+[[skills]]
 name = "frontend-slides"
 local_path = "skills/frontend-slides"
 upstream_url = "https://github.com/zarazhangrui/frontend-slides"

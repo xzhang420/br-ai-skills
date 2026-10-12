@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Image Prompting"
+  short_description: "Draft prompts and generate images in Codex"
+  default_prompt: "Use $codex-image-prompting to turn this visual idea into a precise prompt, then generate the image in Codex Desktop."
