@@ -72,7 +72,7 @@ interpreting lifecycle state.
 Use `uv run`; do not invoke the script with `python` or `python3`.
 
 ```bash
-SKILL_DIR=/home/localadmin/dev/br-codex-skillset/skills/godzilla-scicat-batch-ingest
+SKILL_DIR="$HOME/.codex/skills/godzilla-scicat-batch-ingest"
 PLAN=/data01/scicat_ingest/P########/batch_plan.json
 
 UV_CACHE_DIR=/tmp/uv-cache-godzilla-scicat uv run \

@@ -8,8 +8,8 @@ Install Git for Windows, then clone the repo:
 
 ```powershell
 New-Item -ItemType Directory -Path "$env:USERPROFILE\dev" -Force
-git clone https://github.com/xzhang420/br-codex-skillset.git "$env:USERPROFILE\dev\br-codex-skillset"
-cd "$env:USERPROFILE\dev\br-codex-skillset"
+git clone https://github.com/xzhang420/br-ai-skills.git "$env:USERPROFILE\dev\br-ai-skills"
+cd "$env:USERPROFILE\dev\br-ai-skills"
 ```
 
 Run the bootstrap script with the device prefix you want that computer to own:
@@ -26,8 +26,8 @@ Install Git, then clone the repo:
 
 ```bash
 mkdir -p ~/dev
-git clone https://github.com/xzhang420/br-codex-skillset.git ~/dev/br-codex-skillset
-cd ~/dev/br-codex-skillset
+git clone https://github.com/xzhang420/br-ai-skills.git ~/dev/br-ai-skills
+cd ~/dev/br-ai-skills
 ```
 
 Run the bootstrap script with the device prefix you want that computer to own:

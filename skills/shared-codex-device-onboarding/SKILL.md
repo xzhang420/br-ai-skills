@@ -1,6 +1,6 @@
 ---
 name: shared-codex-device-onboarding
-description: Use when the user says they have a new computer/device, asks how to synchronize Codex skills or settings across computers, asks to set up Codex on another Windows/Linux/Ubuntu machine, or asks to automate future Codex skill sync setup. Provides the shared br-codex-skillset bootstrap workflow and device-prefix ownership rules.
+description: Use when the user says they have a new computer/device, asks how to synchronize Codex skills or settings across computers, asks to set up Codex on another Windows/Linux/Ubuntu machine, or asks to automate future Codex skill sync setup. Provides the shared br-ai-skills bootstrap workflow and device-prefix ownership rules.
 ---
 
 # Shared Codex Device Onboarding
@@ -12,14 +12,14 @@ Use this skill when adding a new computer to the user's Codex skills/settings sy
 The shared private repo is the source of truth for user-maintained skills. Codex-managed system skills under `skills/.system/` are local runtime state and should not be committed. The repo is:
 
 ```text
-https://github.com/xzhang420/br-codex-skillset
+https://github.com/xzhang420/br-ai-skills
 ```
 
 Preferred local paths:
 
 ```text
-Windows: %USERPROFILE%\dev\br-codex-skillset
-Linux/Ubuntu: ~/dev/br-codex-skillset
+Windows: %USERPROFILE%\dev\br-ai-skills
+Linux/Ubuntu: ~/dev/br-ai-skills
 ```
 
 Codex should read skills through:
@@ -54,8 +54,8 @@ Windows:
 
 ```powershell
 New-Item -ItemType Directory -Path "$env:USERPROFILE\dev" -Force
-git clone https://github.com/xzhang420/br-codex-skillset.git "$env:USERPROFILE\dev\br-codex-skillset"
-cd "$env:USERPROFILE\dev\br-codex-skillset"
+git clone https://github.com/xzhang420/br-ai-skills.git "$env:USERPROFILE\dev\br-ai-skills"
+cd "$env:USERPROFILE\dev\br-ai-skills"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1 -DevicePrefix DEVICE-PREFIX
 ```
 
@@ -63,8 +63,8 @@ Linux/Ubuntu:
 
 ```bash
 mkdir -p ~/dev
-git clone https://github.com/xzhang420/br-codex-skillset.git ~/dev/br-codex-skillset
-cd ~/dev/br-codex-skillset
+git clone https://github.com/xzhang420/br-ai-skills.git ~/dev/br-ai-skills
+cd ~/dev/br-ai-skills
 bash scripts/bootstrap-linux.sh DEVICE-PREFIX
 ```
 
@@ -92,7 +92,7 @@ This computer is DEVICE-PREFIX. It owns skill folders whose names start with ski
 Also include:
 
 ```text
-Before changing skills, run git pull --rebase --autostash in the shared br-codex-skillset repo. After creating or editing skills, stage only portable files and exclude skills/.system, commit with a concise message, run git pull --rebase, and push. If there is a conflict or authentication failure, stop and report it. Never force-push.
+Before changing skills, run git pull --rebase --autostash in the shared br-ai-skills repo. After creating or editing skills, stage only portable files and exclude skills/.system, commit with a concise message, run git pull --rebase, and push. If there is a conflict or authentication failure, stop and report it. Never force-push.
 ```
 
 ## Safety
