@@ -163,6 +163,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(commit_sha, remote_sha)
         self.assertEqual(git(self.fixture.dev, "status", "--porcelain"), "")
 
+    def test_save_reviews_both_sides_of_a_rename(self) -> None:
+        original = self.fixture.dev / "README.md"
+        original.rename(self.fixture.dev / "RENAMED.md")
+        output = self.fixture.output("save-rename")
+        code = lumacam.main([
+            "save", "--message", "Move reviewed file", "--reviewed",
+            "--path", "README.md", "--path", "RENAMED.md",
+            "--live", str(self.fixture.live), "--dev", str(self.fixture.dev),
+            "--output", str(output),
+        ])
+        self.assertEqual(code, 0, output.read_text())
+        result = json.loads(output.read_text())
+        self.assertEqual(result["saved_paths"], ["README.md", "RENAMED.md"])
+        self.assertEqual(git(self.fixture.dev, "status", "--porcelain"), "")
+        self.assertEqual(git(self.fixture.remote, "rev-parse", "develop"), result["commit_sha"])
+
     def test_save_refuses_unlisted_change(self) -> None:
         (self.fixture.dev / "README.md").write_text("changed\n", encoding="utf-8")
         (self.fixture.dev / "extra.txt").write_text("unreviewed\n", encoding="utf-8")

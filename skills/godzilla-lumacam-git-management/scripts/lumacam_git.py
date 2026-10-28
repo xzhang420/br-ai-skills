@@ -154,8 +154,8 @@ def revision(repository: Path, ref: str) -> str:
 
 def changed_paths(repository: Path) -> list[str]:
     commands = (
-        ("diff", "--name-only", "-z"),
-        ("diff", "--cached", "--name-only", "-z"),
+        ("diff", "--no-renames", "--name-only", "-z"),
+        ("diff", "--cached", "--no-renames", "--name-only", "-z"),
         ("ls-files", "--others", "--exclude-standard", "-z"),
     )
     paths: set[str] = set()
@@ -166,12 +166,12 @@ def changed_paths(repository: Path) -> list[str]:
 
 
 def staged_paths(repository: Path) -> list[str]:
-    output = git_result(repository, "diff", "--cached", "--name-only", "-z").stdout
+    output = git_result(repository, "diff", "--cached", "--no-renames", "--name-only", "-z").stdout
     return sorted(item for item in output.split("\0") if item)
 
 
 def unstaged_paths(repository: Path) -> list[str]:
-    output = git_result(repository, "diff", "--name-only", "-z").stdout
+    output = git_result(repository, "diff", "--no-renames", "--name-only", "-z").stdout
     return sorted(item for item in output.split("\0") if item)
 
 
