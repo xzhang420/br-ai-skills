@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import configparser
+import io
 import json
 import os
 from pathlib import Path
@@ -118,7 +120,7 @@ def replace_marked_absolute_path(text: str, marker: str, value: Path, path: Path
 
 
 def atomic_write_text(path: Path, text: str) -> None:
-	mode = path.stat().st_mode
+	mode = path.stat().st_mode if path.exists() else 0o644
 	fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
 	try:
 		with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -133,6 +135,85 @@ def atomic_write_text(path: Path, text: str) -> None:
 		except FileNotFoundError:
 			pass
 		raise
+
+
+def content_root(proposal_dir: Path, data_root_relative: Path | None = None) -> Path:
+	if data_root_relative is not None:
+		return proposal_dir / "reduced" if data_root_relative.parts[0] == "reduced" else proposal_dir
+	return proposal_dir / "reduced" if (proposal_dir / "reduced").is_dir() else proposal_dir
+
+
+def raw_root(proposal_dir: Path, data_root_relative: Path) -> Path:
+	return proposal_dir / "raw" if data_root_relative.parts[0] == "reduced" else proposal_dir / data_root_relative / "tpx3Files"
+
+
+def focus_assignments(proposal_dir: Path, data_root_relative: Path) -> dict[str, str]:
+	if data_root_relative.parts[0] == "reduced":
+		return {
+			"series_dir": f"Path({str(proposal_dir / 'raw')!r})",
+			"cache_dir": 'series_dir.parent / "reduced" / "data" / "experiment" / ".work" / "batch_focus_cache"',
+			"output_csv": 'series_dir.parent / "reduced" / "documentation" / "batch_focus_summary.csv"',
+		}
+	return {
+		"series_dir": f"Path({str(raw_root(proposal_dir, data_root_relative))!r})",
+		"cache_dir": 'series_dir.parent / ".work" / "batch_focus_cache"',
+		"output_csv": 'series_dir.parents[2] / "documentation" / "batch_focus_summary.csv"',
+	}
+
+
+def pipeline_config_values(proposal_dir: Path, data_root_relative: Path | None = None) -> dict[str, dict[str, str]]:
+	"""A clean startup config; the pipeline supplies other processing defaults."""
+	base = content_root(proposal_dir, data_root_relative)
+	beam_dir = str(base / "data/beamhistory")
+	return {
+		"pipeline": {"preset": "operando_nci"},
+		"project": {
+			"data_path": str(proposal_dir), "experiment": "", "variant": "",
+			"result_root": "", "analysis_name": "",
+		},
+		"corrections": {
+			"beamhistory_path": beam_dir, "reference_beamhistory_path": beam_dir,
+			"reference_dir": "", "prepared_reference_path": "", "file_filter": "",
+		},
+		"background": {
+			"enabled": "False", "source_mode": "auto", "background_path": "",
+		},
+		"shared_setup": {
+			"reference_set": "", "ob_experiment": "", "background_experiment": "",
+			"reference_source_path": "", "prepared_reference_path": "",
+			"prepared_background_path": "", "metadata_path": "",
+			"reference_tiff_count": "0", "background_source_tiff_count": "0",
+			"background_tiff_count": "0",
+		},
+		"electrochemistry": {"path": str(base / "data/echem")},
+	}
+
+
+def prepare_pipeline_config_text(proposal_dir: Path, data_root_relative: Path | None = None) -> str:
+	"""Do not copy campaign-specific settings from the toolbox or template."""
+	parser = configparser.ConfigParser()
+	for section, values in pipeline_config_values(proposal_dir, data_root_relative).items():
+		parser[section] = {key: value.replace("%", "%%") for key, value in values.items()}
+	buffer = io.StringIO()
+	buffer.write(
+		"# Proposal-specific LumaCam processing settings.\n"
+		"# Load this file in the toolbox notebook; processing actions save it here.\n"
+		"# Choose a processing mode, experiment and TIFF variant before discovery.\n"
+		"# Put optional input files in the folders below, or clear their paths to skip them.\n"
+		"# Other processing defaults are filled in by the pipeline when loaded.\n\n"
+	)
+	parser.write(buffer)
+	return buffer.getvalue()
+
+
+def validate_pipeline_config(path: Path, proposal_dir: Path) -> None:
+	parser = configparser.ConfigParser()
+	parser.read_string(path.read_text(encoding="utf-8"))
+	actual = {section: dict(parser.items(section)) for section in parser.sections()}
+	if actual != pipeline_config_values(proposal_dir):
+		raise SetupError(f"Post-write validation failed for pipeline config: {path}")
+	for relative in ("analysis", "data/beamhistory", "data/echem"):
+		require_directory(content_root(proposal_dir) / relative, f"Proposal {relative} directory")
 
 
 def photon_test_files(root: Path) -> list[Path]:
@@ -176,14 +257,7 @@ def prepare_batch_focus_notebook_text(
 	if not isinstance(cells, list):
 		raise SetupError(f"Notebook has no valid cells list: {notebook_path}")
 
-	target = proposal_dir / data_root_relative / "tpx3Files"
-	assignments = {
-		"series_dir": f"Path({str(target)!r})",
-		"cache_dir": 'series_dir.parent / ".work" / "batch_focus_cache"',
-		"output_csv": (
-			'series_dir.parents[2] / "documentation" / "batch_focus_summary.csv"'
-		),
-	}
+	assignments = focus_assignments(proposal_dir, data_root_relative)
 	match_counts = {key: 0 for key in assignments}
 	for cell_index, cell in enumerate(cells):
 		if not isinstance(cell, dict) or cell.get("cell_type") != "code":
@@ -281,17 +355,37 @@ def prepare_file_updates(
 
 def validate_template(template: Path) -> Path:
 	template = require_directory(template, "Proposal template")
-	roots = [template / "data" / name for name in ("experiment", "experiments")
-		if (template / "data" / name).exists() or (template / "data" / name).is_symlink()]
+	roots = [template / relative for relative in (
+		"data/experiment", "data/experiments", "reduced/data/experiment", "reduced/data/experiments")
+		if (template / relative).exists() or (template / relative).is_symlink()]
 	if len(roots) != 1:
-		raise SetupError(f"Expected exactly one data/experiment or data/experiments root in {template}; found {len(roots)}")
+		raise SetupError(f"Expected exactly one acquisition root in {template}; found {len(roots)}")
+	if roots[0].is_symlink():
+		raise SetupError(f"Template data root must be a real directory: {roots[0]}")
 	data_root = require_directory(roots[0], "Template data root")
 	if not data_root.is_relative_to(template):
 		raise SetupError(f"Template data root escapes template: {data_root}")
-	for name in ("tpx3Files", "final", "derived", "logs", "metadata", ".work"):
+	relative_root = data_root.relative_to(template)
+	base = content_root(template, relative_root)
+	raw = raw_root(template, relative_root)
+	if raw.is_symlink():
+		raise SetupError(f"Template raw root must be a real directory: {raw}")
+	require_directory(raw, "Template raw directory")
+	if base != template and (data_root / "tpx3Files").exists():
+		raise SetupError(f"Mixed raw/reduced and nested raw layout: {template}")
+	if base == template and (template / "raw").exists():
+		raise SetupError(f"Mixed historical and raw/reduced layout: {template}")
+	for relative in ("analysis", "data/beamhistory", "data/echem"):
+		path = base / relative
+		if path.is_symlink() or (path.exists() and not path.is_dir()):
+			raise SetupError(f"Template {relative} must be a real directory: {path}")
+	config_path = base / "analysis/lumacam_pipeline.ini"
+	if config_path.is_symlink() or (config_path.exists() and not config_path.is_file()):
+		raise SetupError(f"Template pipeline config must be a regular file: {config_path}")
+	for name in ("final", "derived", "logs", "metadata", ".work"):
 		require_directory(data_root / name, f"Template {name} directory")
-	require_file(template / "documentation/experiment_log.md", "Experiment log")
-	require_file(template / "documentation/measurement_protocol.md", "Measurement protocol")
+	require_file(base / "documentation/experiment_log.md", "Experiment log")
+	require_file(base / "documentation/measurement_protocol.md", "Measurement protocol")
 	marker = data_root / "metadata/layout.json"
 	if marker.exists():
 		raise SetupError(f"The structural template must not contain layout.json: {marker}")
@@ -383,7 +477,7 @@ def main(argv: list[str] | None = None) -> int:
 		template_data_root = validate_template(template)
 		data_root_relative = template_data_root.relative_to(template)
 		require_directory(
-			template_data_root / "tpx3Files", "Template TPX3 data directory"
+			raw_root(template, data_root_relative), "Template TPX3 data directory"
 		)
 		processing_path = validate_processing_parameters(repository)
 		pixel, dacs = calibration_pair(args.calibration_dir)
@@ -394,6 +488,9 @@ def main(argv: list[str] | None = None) -> int:
 			raise SetupError(f"Proposal path escapes proposal parent: {proposal_dir}")
 		if proposal_dir.exists():
 			raise SetupError(f"Refusing to overwrite existing proposal directory: {proposal_dir}")
+		base = content_root(proposal_dir, data_root_relative)
+		pipeline_config_path = base / "analysis/lumacam_pipeline.ini"
+		pipeline_config_text = prepare_pipeline_config_text(proposal_dir, data_root_relative)
 		updates = prepare_file_updates(
 			repository,
 			photon_root,
@@ -411,8 +508,13 @@ def main(argv: list[str] | None = None) -> int:
 		print(f"DAC calibration: {dacs}")
 		print(f"Monitored-acquisition recipients: {', '.join(recipients)}")
 		print(f"Processing parameters (unchanged): {processing_path}")
+		print(f"Create pipeline config: {pipeline_config_path}")
+		print(f"Pipeline Data: {proposal_dir}")
+		print(f"Pipeline electrochemistry: {base / 'data/echem'}")
+		print(f"Pipeline beam history (sample and OB/BG): {base / 'data/beamhistory'}")
+		print("Pipeline experiment, variant and OB/BG selections: blank; background correction: off")
 		data_root = proposal_dir / data_root_relative
-		print(f"Batch-focus TPX3 root: {data_root / 'tpx3Files'}")
+		print(f"Batch-focus TPX3 root: {raw_root(proposal_dir, data_root_relative)}")
 		print(
 			f"Batch-focus cache: "
 			f"{data_root / '.work/batch_focus_cache'}"
@@ -425,6 +527,11 @@ def main(argv: list[str] | None = None) -> int:
 			return 0
 
 		shutil.copytree(template, proposal_dir, copy_function=shutil.copy2)
+		for relative in ("analysis", "data/beamhistory", "data/echem"):
+			(base / relative).mkdir(parents=True, exist_ok=True)
+		atomic_write_text(pipeline_config_path, pipeline_config_text)
+		# Verify the processing config before activating any acquisition settings.
+		validate_pipeline_config(pipeline_config_path, proposal_dir)
 		for path, text in updates.items():
 			atomic_write_text(path, text)
 
@@ -443,22 +550,16 @@ def main(argv: list[str] | None = None) -> int:
 			contains_all(path, (str(pixel), str(dacs)))
 		notebook_source_contains_all(
 			batch_focus_notebook,
-			(
-				str(data_root / "tpx3Files"),
-				'cache_dir = series_dir.parent / ".work" / "batch_focus_cache"',
-				(
-					'output_csv = series_dir.parents[2] / "documentation" / '
-					'"batch_focus_summary.csv"'
-				),
-			),
+			tuple(f"{key} = {value}" for key, value in focus_assignments(proposal_dir, data_root_relative).items()),
 		)
 		print("Setup completed and post-write validation passed.")
+		print(f"Processing: open the toolbox LumaCam notebook and Load config: {pipeline_config_path}")
 		for warning in detector_warnings():
 			print(f"WARNING: {warning}", file=sys.stderr)
 		print(f"Run from: cd -P {repository}")
 		print("Smoke test: ./dataAcq_single.sh 5 test001")
 		return 0
-	except (SetupError, OSError, shutil.Error) as error:
+	except (SetupError, OSError, shutil.Error, configparser.Error) as error:
 		print(f"ERROR: {error}", file=sys.stderr)
 		return 1
 

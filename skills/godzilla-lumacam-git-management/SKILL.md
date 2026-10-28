@@ -108,7 +108,9 @@ This validates dev, stages only the listed files, commits, and pushes
 
 Get exact candidate SHA from `status` or `save`. Promotion requires a clean,
 fully pushed `develop`, clean and current `main`, passing software validation,
-and no detected acquisition process.
+and no detected acquisition process. Terminal session labels (for example an
+idle `screen -S serval`) are ignored; actual detector/server children still block
+promotion.
 
 If user confirms hardware testing:
 

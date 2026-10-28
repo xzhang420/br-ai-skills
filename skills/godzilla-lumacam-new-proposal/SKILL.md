@@ -52,12 +52,12 @@ The script must complete all of these together:
 
 1. Validate the safe proposal name, live structural template, calibration pair, processing-parameter JSON, acquisition settings, and photon-test files.
 2. Refuse to overwrite an existing `/data01/<proposal-name>` directory.
-3. Copy the live `lumacam_proposal_template` to `/data01/<proposal-name>`.
+3. Copy the live `lumacam_proposal_template` to `/data01/<proposal-name>`. The paths below describe the new raw/reduced template; retain the corresponding original paths when copying an older template. Generate and validate `reduced/analysis/lumacam_pipeline.ini` before activating acquisition settings: Data points to the new proposal, electrochemistry to `reduced/data/echem`, and both sample/reference beam history to the same `reduced/data/beamhistory` folder. Create these directories if missing. Start with blank experiment, TIFF variant, OB/BG selections, prepared-reference/background paths and result overrides; background correction is off. Never inherit campaign settings from the toolbox starter or a template INI. Other processing defaults come from the pipeline when loaded.
 4. Set `LUMACAM_PROPOSAL_DIR` in `acquisitionSettings.sh`.
 5. Set `config_pixel_path` and `config_dacs_path` in `python/settings_installation.py`.
 6. Replace `DEFAULT_EMAIL_TO` in `monitor_dataAcq_sumImages.py` with exactly the requested deduplicated recipient list. This is a workstation-wide monitor default for subsequent acquisitions, not proposal metadata; it intentionally replaces the preceding campaign's list. Do not change the sender address unless the user separately requests it.
 7. Update the pixel and DAC calibration URLs in every `tpxAcqPhotonTest.py` below `/data01/data_acquisition`.
-8. Detect the template's actual acquisition root: new templates use `data/experiment`; older production templates may still use `data/experiments`. Refuse a template containing both. Set `series_dir` in `/home/localadmin/Programs/tpx3cam-analysis/TPX3_batch_focus.ipynb` to that same root's `tpx3Files` directory inside the new proposal. Its cache must resolve to the same root's `.work/batch_focus_cache`, never to the Programs directory. Do not hard-code a different root or rename existing proposal data during setup.
+8. Detect the template's actual raw and reduced roots. New templates use proposal-level `raw/` and `reduced/data/experiment/`; earlier templates using `data/experiment/tpx3Files` or `data/experiments/tpx3Files` remain supported. Refuse conflicting roots or nested raw directories inside a split layout. Set `series_dir` in `/home/localadmin/Programs/tpx3cam-analysis/TPX3_batch_focus.ipynb` to the selected raw root. For split proposals, its cache belongs in `reduced/data/experiment/.work/batch_focus_cache` and its CSV in `reduced/documentation/batch_focus_summary.csv`; for older templates, preserve the corresponding existing acquisition-root cache and proposal documentation paths. Never rename existing proposal data during new-proposal setup.
 9. Validate the resulting paths and report the active `parameterSettings.json`; do not change processing thresholds unless the user explicitly requests new values.
 10. Report any process holding detector UDP port 8192. Never terminate a process without first identifying the exact owner and obtaining authorization when needed.
 
@@ -67,15 +67,24 @@ If a validation or write fails, report the failing path. Do not substitute an ol
 
 Independently confirm that:
 
-- `/data01/<proposal>/data/experiment/` (or the copied older template's `data/experiments/`) contains the standard acquisition subdirectories and no `layout.json` is required;
+- `/data01/<proposal>/raw/` and `reduced/data/experiment/` contain the separate raw and reduced trees; historical templates retain their actual root names. No `layout.json` is required;
+- `reduced/analysis/lumacam_pipeline.ini` exists, its Data/electrochemistry/beam paths point inside this proposal, and its experiment and OB/BG selections are blank;
 - all configured calibration files resolve inside the requested calibration directory;
 - `DEFAULT_EMAIL_TO` in `monitor_dataAcq_sumImages.py` contains exactly the requested deduplicated recipients;
 - both photon-test copies use the same calibration pair;
-- `TPX3_batch_focus.ipynb` points at the selected acquisition root's `tpx3Files` and its derived cache location is that root's `.work/batch_focus_cache`;
+- `TPX3_batch_focus.ipynb` points at the selected raw root; its cache and summary resolve inside this proposal's reduced work and documentation directories;
 - `parameterSettings.json` remains the active processing-parameter file;
 - no Sophy, Serval, or acquisition process unexpectedly owns UDP port 8192.
 
 If `TPX3_batch_focus.ipynb` was already open while the setup ran, tell the user to reload it from disk before running it.
+
+For processing, keep using the notebook in `toolbox/lumacam_pipeline/`. Select
+the new `reduced/analysis/lumacam_pipeline.ini` under **Config** and click **Load config**
+before discovery. Choose the processing mode (initially Operando NCI), experiment
+and TIFF variant. Add optional files to `reduced/data/echem` and `reduced/data/beamhistory`, or
+clear the corresponding GUI paths when those inputs are not used. Normal
+processing actions then update this same proposal config. Manual template copies
+do not generate or repoint the INI; use the setup script.
 
 Test monitored email delivery without starting an acquisition:
 
@@ -94,4 +103,4 @@ cd -P /home/localadmin/Programs/lumacam_measurementcontrol
 ./dataAcq_single.sh 5 test001
 ```
 
-Also mention that Sophy and `dataAcq_*` cannot control the detector simultaneously. On interruption, preserve `.work`; use the repository recovery workflow for non-empty incoming TPX3 files rather than deleting them.
+Also mention that Sophy and `dataAcq_*` cannot control the detector simultaneously. On interruption, preserve `raw/.incoming` and reduced `.work`; use the repository recovery workflow for non-empty incoming TPX3 files rather than deleting them.

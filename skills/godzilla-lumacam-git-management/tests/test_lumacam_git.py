@@ -273,5 +273,17 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(git(self.fixture.dev, "rev-parse", "develop"), commit_sha)
 
 
+
+
+
+class AcquisitionProcessDetectionTests(unittest.TestCase):
+    def test_idle_screen_label_is_ignored_but_server_and_reduction_children_block(self):
+        output = "990001 screen SCREEN -S serval -dm\n990002 bash /bin/bash\n990003 Serval /opt/Serval\n990004 python3 python3 tpxAcq_continuous_2.py\n"
+        result = subprocess.CompletedProcess([], 0, stdout=output, stderr="")
+        with mock.patch.object(lumacam, "run_command", return_value=result):
+            active = lumacam.active_acquisition_processes()
+        self.assertEqual([entry["pid"] for entry in active], [990003, 990004])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -218,16 +218,19 @@ def require_remote_sync(live: Path, dev: Path, remote: str) -> dict[str, str]:
 
 
 def active_acquisition_processes() -> list[dict[str, Any]]:
-    result = run_command(["ps", "-eo", "pid=,args="], cwd=Path("/"), timeout=10)
+    result = run_command(["ps", "-eo", "pid=,comm=,args="], cwd=Path("/"), timeout=10)
     matches: list[dict[str, Any]] = []
     for line in result.stdout.splitlines():
         stripped = line.strip()
         if not stripped:
             continue
-        parts = stripped.split(maxsplit=1)
-        if len(parts) != 2:
+        parts = stripped.split(maxsplit=2)
+        if len(parts) != 3:
             continue
-        pid_text, command = parts
+        pid_text, executable, command = parts
+        # Session labels are not running detectors; their children are scanned too.
+        if executable.lower() in {"screen", "tmux"}:
+            continue
         if not pid_text.isdigit() or int(pid_text) == os.getpid():
             continue
         lower_command = command.lower()
