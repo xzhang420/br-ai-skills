@@ -10,8 +10,9 @@ Usage:
 Default mode is a read-only audit.
 
 Options:
-  --root PATH                 Absolute tpx3Files directory (required)
-  --execute                   Create archives and remove verified sources
+  --root PATH                 Absolute raw or legacy tpx3Files directory (required)
+  --execute                   Create verified archives; retain source folders
+  --delete-sources            Remove verified sources (requires explicit user authorization)
   --threads N                 pigz threads (default: 16)
   --min-age-minutes N         Refuse files newer than N minutes (default: 60)
   --max-source-bytes N        Refuse a source larger than N bytes (default: 1000000000000)
@@ -54,6 +55,7 @@ threads=16
 min_age_minutes=60
 max_source_bytes=1000000000000
 execute_mode=0
+delete_sources=0
 replace_partials=0
 experiments=()
 
@@ -66,6 +68,10 @@ while (($#)); do
             ;;
         --execute)
             execute_mode=1
+            shift
+            ;;
+        --delete-sources)
+            delete_sources=1
             shift
             ;;
         --threads)
@@ -117,7 +123,10 @@ is_positive_integer "$max_source_bytes" || die '--max-source-bytes must be a pos
 [[ -d $root ]] || die "root does not exist: $root"
 [[ ! -L $root ]] || die "refusing symlinked root: $root"
 root=$(realpath -e -- "$root")
-[[ ${root##*/} == 'tpx3Files' ]] || die "root basename must be tpx3Files: $root"
+case ${root##*/} in
+    raw|tpx3Files) ;;
+    *) die "root basename must be raw or tpx3Files: $root" ;;
+esac
 
 command -v find >/dev/null || die 'find is required'
 command -v tar >/dev/null || die 'tar is required'
@@ -130,6 +139,7 @@ for experiment_name in "${experiments[@]}"; do
     [[ -n $experiment_name && $experiment_name != '.' && $experiment_name != '..' ]] ||
         die 'experiment names must be non-empty exact directory names'
     [[ $experiment_name != */* ]] || die "experiment name must not contain '/': $experiment_name"
+    [[ $experiment_name != .* ]] || die "hidden directories are not experiment targets: $experiment_name"
     case $experiment_name in
         *'*'*|*'?'*|*'['*) die "globs are not allowed: $experiment_name" ;;
     esac
@@ -149,6 +159,7 @@ largest_source=0
 total_source=0
 printf 'MODE=%s\n' "$([[ $execute_mode -eq 1 ]] && printf execute || printf audit)"
 printf 'ROOT=%s\n' "$root"
+printf 'SOURCE_POLICY=%s\n' "$([[ $delete_sources -eq 1 ]] && printf delete-after-verification || printf retain)"
 printf 'experiment\tentries\tfiles\ttpx3_files\tbytes\trecent_files\tarchive_state\n'
 for experiment_name in "${experiments[@]}"; do
     source_dir="$root/$experiment_name"
@@ -176,13 +187,15 @@ for experiment_name in "${experiments[@]}"; do
 done
 
 available_bytes=$(df -B1 --output=avail "$root" | tail -1 | tr -d ' ')
-required_peak=$((largest_source + largest_source / 100 + 1073741824))
+space_basis=$total_source
+((delete_sources == 0)) || space_basis=$largest_source
+required_peak=$((space_basis + space_basis / 100 + 1073741824))
 printf 'TOTAL_SOURCE_BYTES=%s\n' "$total_source"
 printf 'LARGEST_SOURCE_BYTES=%s\n' "$largest_source"
 printf 'AVAILABLE_BYTES=%s\n' "$available_bytes"
 printf 'REQUIRED_PEAK_BYTES=%s\n' "$required_peak"
 if ((available_bytes < required_peak)); then
-    printf 'REFUSE: insufficient free space for the largest sequential archive\n' >&2
+    printf 'REFUSE: insufficient free space for the selected source-retention policy\n' >&2
     audit_failed=1
 fi
 
@@ -194,7 +207,11 @@ fi
 ((audit_failed == 0)) || die 'preflight audit failed; no source was changed'
 
 if [[ -z $log_path ]]; then
-    proposal_root=$(realpath -m -- "$root/../../..")
+    if [[ ${root##*/} == raw ]]; then
+        proposal_root=$(dirname -- "$root")
+    else
+        proposal_root=$(realpath -m -- "$root/../../..")
+    fi
     log_path="$proposal_root/compression_tpx3_experiments.log"
 fi
 [[ $log_path = /* ]] || die '--log must be an absolute path'
@@ -206,7 +223,7 @@ exec 9>"$lock_path"
 flock -n 9 || die "another archive process holds the root lock: $lock_path"
 
 exec >>"$log_path" 2>&1
-log "START: root=$root experiments=${#experiments[@]} source_bytes=$total_source threads=$threads"
+log "START: root=$root experiments=${#experiments[@]} source_bytes=$total_source threads=$threads delete_sources=$delete_sources"
 
 completed=0
 for experiment_name in "${experiments[@]}"; do
@@ -214,7 +231,9 @@ for experiment_name in "${experiments[@]}"; do
     final_archive="$root/$experiment_name.tar.gz"
     partial_archive="$final_archive.partial"
 
-    if [[ -e $partial_archive ]]; then
+    [[ ! -e $final_archive && ! -L $final_archive ]] || die "final archive exists: $final_archive"
+    if [[ -e $partial_archive || -L $partial_archive ]]; then
+        ((replace_partials == 1)) || die "partial archive exists: $partial_archive"
         log "REMOVE INCOMPLETE: $partial_archive"
         rm -f -- "$partial_archive"
     fi
@@ -224,7 +243,7 @@ for experiment_name in "${experiments[@]}"; do
     log "ARCHIVE START: $experiment_name entries=$source_entries files=$source_files bytes=$source_bytes"
 
     tar --one-file-system -C "$root" -cf - -- "$experiment_name" |
-        pigz -6 -p "$threads" >"$partial_archive"
+        (set -o noclobber; pigz -6 -p "$threads" >"$partial_archive")
     sync -f "$partial_archive"
     archive_bytes=$(stat -c '%s' "$partial_archive")
     log "VERIFY START: $experiment_name archive_bytes=$archive_bytes"
@@ -240,11 +259,17 @@ for experiment_name in "${experiments[@]}"; do
         die "source changed during archiving for $experiment_name"
 
     log "VERIFY COMPLETE: $experiment_name entries=$archive_entries"
-    mv -T -- "$partial_archive" "$final_archive"
+    mv --no-clobber -T -- "$partial_archive" "$final_archive"
+    [[ ! -e $partial_archive ]] || die "archive publication refused; source retained: $final_archive"
     sync -f "$final_archive"
 
-    rm -rf -- "$source_dir"
-    [[ ! -e $source_dir ]] || die "source remains after removal: $source_dir"
+    if ((delete_sources == 1)); then
+        rm -rf -- "$source_dir"
+        [[ ! -e $source_dir ]] || die "source remains after removal: $source_dir"
+        log "SOURCE REMOVED: $experiment_name"
+    else
+        log "SOURCE RETAINED: $experiment_name"
+    fi
 
     finished_epoch=$(date +%s)
     elapsed=$((finished_epoch - started_epoch))
