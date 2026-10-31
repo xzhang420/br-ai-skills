@@ -68,7 +68,7 @@ The script serializes its own runs with a local Git-directory lock. It rechecks
 the checkout after fetching; it cannot lock out every external editor or Git
 client, so avoid editing while a pull is running.
 
-Use the app's supported scheduler to run this script every four hours on each
+Use the app's supported scheduler to run this script daily on each
 device that needs it. Local scheduled tasks need the computer on and the app
 running. Schedule registration is device-local, not installed by a Git pull.
 No startup trigger or background push is installed by this script.
