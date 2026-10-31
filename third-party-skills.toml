@@ -12,6 +12,25 @@ own_skill_update_policy = "auto-commit-and-push-within-authorized-task-scope"
 other_device_policy = "pull-shared-repo-only"
 
 [[skills]]
+name = "agent-reach"
+local_path = "skills/agent-reach"
+upstream_url = "https://github.com/Panniantong/Agent-Reach"
+source_type = "github-subdir"
+upstream_subdir = "agent_reach/skill"
+tracking = "release"
+current_source = "v1.6.0 at beabda7486e9a666360b18cdb5c0e759c2c4d20f; English SKILL.md rendered by official 1.6.0 CLI with bundled references, installed 2026-10-31"
+
+preserve_rules = [
+  "Keep a real portable folder at skills/agent-reach, not a machine-specific symlink.",
+  "Use the release's English skill template rendered with its version and channel table; do not leave template placeholders or unused language templates in the shared folder.",
+  "Preserve bundled references and the repository-root LICENSE inside skills/agent-reach.",
+  "Sync only instructions and references. Do not install or update Agent-Reach software or channel dependencies during automated skill updates; report runtime compatibility requirements.",
+  "Install the CLI separately on each device from the official GitHub release, never the unrelated PyPI package of the same name.",
+  "Never commit .agent-reach runtime state, browser profiles, cookies, API keys, or machine-specific skill-link records.",
+  "Run skill validation and git diff --check before committing updates."
+]
+
+[[skills]]
 name = "codex-image-prompting"
 local_path = "skills/codex-image-prompting"
 upstream_url = "https://github.com/pimenov/codex-image-prompting-skill"
