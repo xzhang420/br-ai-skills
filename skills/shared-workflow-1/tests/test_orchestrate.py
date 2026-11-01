@@ -64,6 +64,36 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(self.run.valid('implementation'))
         w.plan(self.run, Fake([]))
         self.assertEqual(self.run.state['state'], 'awaiting_approval')
+    def test_reopening_plan_preserves_existing_approval_and_progress(self):
+        self.ready()
+        approved_at = self.run.state['approved_at']
+        approved_hash = self.run.state['approved_sha256']
+        for completed in (False, True):
+            with self.subTest(completed=completed):
+                if completed:
+                    w.execute(self.run, Fake(['impl', PASS_VALIDATION, 'DECISION: PASS', 'Interpretation']))
+                before = self.run.state.copy()
+                self.run.freeze()
+                w.plan(self.run, Fake([]))
+                self.assertEqual(self.run.state, before)
+                self.run.check_approved()
+                self.assertEqual(self.run.state['approved_at'], approved_at)
+                self.assertEqual(self.run.state['approved_sha256'], approved_hash)
+                if completed:
+                    self.assertTrue(w.test_passes(self.run))
+                    self.run.accept('accept', 'Human reviewed the evidence')
+
+    def test_refreeze_after_real_revision_requires_new_approval(self):
+        self.ready()
+        previous = self.run.state['approved_sha256']
+        self.run.record('specification', 'Revised scientific contract', STUB)
+        self.run.freeze()
+        self.assertEqual(self.run.state['state'], 'awaiting_approval')
+        self.assertNotEqual(self.run.state['frozen_sha256'], previous)
+        self.assertNotIn('approved_sha256', self.run.state)
+        with self.assertRaises(w.WorkflowError):
+            self.run.check_approved()
+
     def test_revise_routes_feedback_to_implementation(self):
         self.ready()
         fake = Fake(['impl', 'tests fail', 'DECISION: REVISE\nFix edge case',

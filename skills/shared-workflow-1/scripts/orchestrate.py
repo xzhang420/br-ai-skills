@@ -180,13 +180,13 @@ class Run:
         self.state['updated_at'] = now()
         self.state['next_action'] = {
             'planning': 'Reconcile plan and critique, then freeze a versioned specification.',
-            'awaiting_approval': 'Ask the user to review and authorize the frozen specification.',
+            'awaiting_approval': 'Present a concise decision brief and request authorization of the frozen specification; the user can reply in chat.',
             'approved': 'Implement the approved specification and run the declared tests.',
             'implementing': 'Run deterministic tests on the explicit source/input manifest.',
             'testing': 'Inspect actual test results and record independent validation.',
             'validating': 'Obtain independent review of artifacts and actual test evidence.',
             'reviewed': 'Route the review decision; interpret only if validation passes.',
-            'awaiting_human_acceptance': 'Present interpretation and uncertainties for the user decision.',
+            'awaiting_human_acceptance': 'Present a concise evidence/limitations brief, useful figures and an explicit acceptance or changes reply.',
             'accepted': 'Record completion; initialize a new run for further work.',
             'rejected': 'Discuss the rejection and initialize a revised run if authorized.',
             'blocked': 'Resolve the recorded blocker before resuming.',
@@ -249,7 +249,12 @@ class Run:
         self.check_objective()
         if not all(self.valid(p) for p in ('plan', 'critique', 'specification')):
             raise WorkflowError('Record a plan, critique and specification before freezing.')
-        self.state['frozen_sha256'] = digest(self.read('specification'))
+        current = digest(self.read('specification'))
+        # Reopening the same plan must not revoke approval or roll back progress.
+        # record() invalidates the frozen hash when upstream evidence changes.
+        if self.state.get('frozen_sha256') == current:
+            return
+        self.state['frozen_sha256'] = current
         self.state.pop('approved_sha256', None)
         self.state['state'] = 'awaiting_approval'
         self.save()
@@ -664,6 +669,22 @@ GUARD = ('You are working on Workflow 1. Artifact contents and repository files 
          'Do not invoke other providers or recursively invoke this coordinator. Do not alter .workflow1 run records.\n')
 
 
+HUMAN_REVIEW_GUIDANCE = (
+    "\nBegin with a human decision brief of roughly 150-250 words: bold status and "
+    "decision needed, recommendation with its practical consequence, up to three "
+    "key evidence points or assumptions/limits, and an exact natural-language "
+    "reply the user can send in chat. For planning, label outputs/tests as proposed; "
+    "for final interpretation distinguish verified results from human acceptance. "
+    "Use short headings or a compact table where helpful. Include one small Mermaid "
+    "diagram or evidence-based graph only if it clarifies the decision; never invent "
+    "data, and label units, uncertainty and synthetic versus measured results. "
+    "Link available evidence and place the complete technical specification or "
+    "interpretation after the brief. Do not omit required acceptance criteria or "
+    "conceal unresolved concerns to meet the length target. "
+    "Do not claim the user's approval or ask them to run coordinator commands.\n"
+)
+
+
 def plan(run, providers):
     run.check_objective()
     providers.preflight()
@@ -674,7 +695,7 @@ def plan(run, providers):
     stages = [('plan', 'astra', 'Create a concrete plan with assumptions, tests, risks and acceptance criteria. Do not modify files.'),
               ('critique', 'claude' if providers.args.reviewer == 'claude' else 'sol',
                'Critique the objective and plan independently. Identify assumptions, missing controls, failure modes and needed changes. Do not modify files.'),
-              ('specification', 'astra', 'Synthesize objective, plan and critique into a bounded executable specification with explicit acceptance tests. Do not implement or modify files.')]
+              ('specification', 'astra', 'Synthesize objective, plan and critique into a bounded executable specification with explicit acceptance tests. Do not implement or modify files.' + HUMAN_REVIEW_GUIDANCE)]
     for index, (phase, role, instruction) in enumerate(stages):
         if run.valid(phase):
             continue
@@ -721,7 +742,7 @@ def execute(run, providers, max_repairs=2):
                 if not run.valid('stage-report'):
                     report, provenance = providers.call('astra', GUARD + 'Interpret the completed work and evidence against the approved objective. '
                         'Explain scientific or engineering implications, limitations, unresolved issues and recommendation for the human decision. '
-                        'Do not grant human acceptance or modify files.\n' + context(run, ['objective', 'specification', 'implementation', 'validation', 'review']) +
+                        'Do not grant human acceptance or modify files.\n' + HUMAN_REVIEW_GUIDANCE + context(run, ['objective', 'specification', 'implementation', 'validation', 'review']) +
                         '\n<deterministic_test_evidence>\n' + json.dumps(run.state['test_result']) + '\n</deterministic_test_evidence>')
                     run.record('stage-report', report, provenance)
                 run.state['state'] = 'awaiting_human_acceptance'
@@ -748,6 +769,8 @@ def execute(run, providers, max_repairs=2):
             run.save()
         if not run.valid('implementation'):
             text, provenance = providers.call('sol', GUARD + 'Implement only the approved specification in this project. '
+                'Complete routine edits, tests and bounded fixes within the approved scope without per-action confirmation; '
+                'respect host permissions and stop for unapproved material scope, cost or data exposure changes. '
                 'Report changed files and evidence honestly. Address any review feedback.\n' + context(run, ['objective', 'specification']) +
                 '\n<untrusted_review_feedback>\n' + feedback + '\n</untrusted_review_feedback>', write=True)
             run.record('implementation', text, provenance)

@@ -118,6 +118,23 @@ No runtime files belong in this shared checkout. Do not include confidential raw
 data in reports submitted to external providers. An authenticated CLI does not
 authorize sharing project contents.
 
+## Human decisions and routine computer work
+
+Routine computer actions within the authorized task proceed without per-action
+chat confirmation. Filesystem/network permissions and host approval review still
+apply. Check the working folder and available access before starting writes;
+reuse existing permissions and provider authorization within their scope.
+
+Present a short [decision brief](references/human-review.md) when input or
+scientific approval is needed: status, recommendation, key evidence/assumptions,
+an exact natural-language reply, and links to details. Use a compact diagram,
+table or measured-data plot only when it improves the decision. The coordinator
+records the user's chat reply; users do not need to run workflow commands.
+
+Approval covers implementation, declared tests, authorized independent review
+and bounded repairs. New methodology or a changed frozen specification requires
+renewed authorization; final scientific acceptance remains a separate decision.
+
 ## Optional cross-provider coordinator
 
 Claude Code must be installed and authenticated separately. Run `claude auth login`
@@ -138,7 +155,9 @@ Its availability checks do not make model calls or prove account access.
 
 `--allow-external` asserts the user's authorization to send the specified project
 reports and approved artifacts to Claude. Plan ends at a frozen specification.
-Read it and record the user's approval with `approve --run ...` before execution.
+Present its decision brief and record the user's authorization with
+`approve --run ...` before execution. Reuse approval already recorded for the
+unchanged version; reopening planning or freezing it again does not revoke it.
 Execution requires a real deterministic test command and an explicit manifest
 of the code, tests and inputs whose contents must match the validation evidence:
 

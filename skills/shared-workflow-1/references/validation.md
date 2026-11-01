@@ -21,6 +21,14 @@ hash, and edits invalidate it. User scientific acceptance is a separate explicit
 decision after validation. Never use an approval command to approve on behalf of
 the user without authorization. See `--help` for each state operation.
 
+Before asking for either decision, present the [human review brief](human-review.md)
+in chat. A plain-language reply approving the presented version is sufficient;
+the coordinator runs the state command and records the actual user decision.
+Reopening a valid, unchanged frozen/approved plan does not require new approval.
+Keep the frozen specification immutable during routine implementation and repair;
+a changed specification or invalidated planning evidence must be recorded,
+frozen and authorized again. Do not claim reauthorization from an earlier version.
+
 Validation must cover relevant numerical invariants, units, physical assumptions,
 uncertainty/error propagation, input provenance, reproducibility and edge cases.
 Tests should challenge plausible mistakes rather than duplicate implementation.

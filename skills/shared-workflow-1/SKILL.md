@@ -37,6 +37,33 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
   Record real participants, input/output paths, commands and exits, objections,
   uncertainties, decisions, and next action. Mark unverified settings honestly.
 
+## Computer actions and human decisions
+
+- Carry forward the user's authorization within its original scope. Proceed with
+  routine reads, searches, navigation, reversible local edits, tests and bounded
+  repairs without asking permission for each action. Prefer purpose-built tools
+  or APIs; use computer UI actions when needed, under the same authorization.
+- Check the actual project folder and writable roots early. Use the authorized
+  workspace and established command approvals to avoid repeated escalations.
+  A skill cannot expand filesystem/network permissions or disable host approval
+  review. Use the host's escalation mechanism when needed; do not ask the same
+  permission again in chat before submitting that request.
+- Batch related missing inputs or consequential decisions into one concise
+  request after completing independent preparation. Reuse authorized provider
+  and data scopes; ask again only for a material change in scope, cost, exposure
+  or risk, or where the host requires it. Login alone is not authorization.
+- Normally the scientific decisions are approval of the concrete specification
+  and acceptance of the validated results. Once implementation is approved,
+  continue through tests, authorized independent review and up to two repair
+  rounds. A methodological change returns to planning. Honor explicit user
+  instructions about approval; never infer approval from silence.
+- Before any human input/approval request or scientific handoff, read
+  [human review](references/human-review.md). Present a short, readable decision
+  brief in chat, link the full evidence and give an exact reply the user can send.
+  Identify whether the pause comes from a scientific decision, missing input,
+  host permission or runtime selection; cite the specific requirement when a
+  rule causes the pause. Do not make the user interpret raw state JSON.
+
 ## Four stages
 
 1. **Plan — Astra.** Define objective, assumptions, evidence, dimensional and
@@ -47,6 +74,9 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
    needs explicit cost/data authorization. Reconcile material objections with
    evidence or tests, then freeze a versioned specification. Agent agreement
    is not evidence. Resolve or surface methodological objections before coding.
+   Present the specification's decision brief; record the user's authorization
+   for that frozen version before implementation, reusing an existing valid
+   authorization instead of asking again.
 2. **Implement — Sol.** Delegate bounded work to `w1_implementer_lower` or
    `w1_implementer_higher`. Assign file ownership, remind agents they share the
    workspace, and wait for results. Use `w1_visual_lower/higher` for accessible
@@ -60,9 +90,9 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
    repairs to two rounds and surface unresolved methodological disputes.
 4. **Scientific acceptance — Astra, then user.** Separate verified computation
    from interpretation, uncertainty and alternatives. Report concise evidence,
-   limitations and open objections. Technical PASS is not human scientific
-   acceptance. Record the user's decision and rationale; rejection returns to
-   the appropriate earlier stage. Never manufacture approval.
+   limitations and open objections using the human review brief. Technical PASS
+   is not human scientific acceptance. Record the user's decision and rationale;
+   rejection returns to the appropriate earlier stage. Never manufacture approval.
 
 Use [validation](references/validation.md) for evidence and state operations,
 and [README](README.md) for installation and executable coordinator examples.
