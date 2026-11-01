@@ -1,13 +1,16 @@
 """Exercise safe sync against disposable local Git repos; no network access."""
 import json
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).with_name('sync-skills.ps1').resolve()
-SHELL = shutil.which('pwsh') or shutil.which('powershell')
+PYTHON_SYNC = os.environ.get('SKILLS_TEST_PYTHON_SYNC') == '1'
+SHELL = sys.executable if PYTHON_SYNC else (shutil.which('pwsh') or shutil.which('powershell'))
 
 
 def git(path, *args):
@@ -42,9 +45,12 @@ class SyncTests(unittest.TestCase):
 
     def sync(self, success, status):
         before = git(self.clone, 'rev-parse', 'HEAD')
-        result = subprocess.run([SHELL, '-NoProfile', '-ExecutionPolicy', 'Bypass',
+        command = ([SHELL, str(SCRIPT.with_suffix('.py')), '--repo', str(self.clone),
+            '--expected-remote', str(self.remote)] if PYTHON_SYNC else
+            [SHELL, '-NoProfile', '-ExecutionPolicy', 'Bypass',
             '-File', str(SCRIPT), '-RepoPath', str(self.clone),
-            '-ExpectedRemote', str(self.remote)], capture_output=True, text=True)
+            '-ExpectedRemote', str(self.remote)])
+        result = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         output = json.loads(result.stdout.strip())
         self.assertEqual(output['status'], status)

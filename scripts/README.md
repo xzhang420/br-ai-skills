@@ -2,6 +2,10 @@
 
 Use these scripts when adding a new computer to the shared Codex skill repo.
 
+For ongoing daily synchronization, single-device third-party updates, and
+persistent commit/push instructions, follow [SKILL-MANAGEMENT.md](SKILL-MANAGEMENT.md).
+Existing devices should use `install-device-policy.py`, not rerun the import bootstrap.
+
 ## Windows
 
 Install Git for Windows, then clone the repo:

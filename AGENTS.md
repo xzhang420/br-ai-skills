@@ -15,9 +15,18 @@ When creating or editing skills from an automated workflow review, only create o
 
 Before changing skills, run `git pull --rebase --autostash` in this repo.
 
+This preparation rule applies to interactive authorized editing, not scheduled
+maintenance. Daily pulls must use the guarded sync script without rebase or
+autostash. Third-party scheduled updates must start with the same clean-tree
+guard. See `scripts/SKILL-MANAGEMENT.md` and `scripts/prompts/`.
+
 After changing skills, stage only portable files such as `skills`, `config.toml`, `AGENTS.md`, scripts, `.gitignore`, and `third-party-skills.toml`, while excluding `skills/.system/`; commit with a concise message; run `git pull --rebase`; then push.
 
 If there is a merge conflict, authentication failure, or uncertainty about overwriting a skill, stop and report it. Never force-push.
+
+Before ending a skill-edit task, report validation, commit hash, push result,
+and remaining working-tree changes or blockers. "Automatic" means after a
+completed, validated task, not every file save and not unrelated edits.
 
 Never stage or commit Codex auth files, sessions, logs, SQLite state files, caches, sandbox files, plugin caches, local backups, or `skills/.system/`.
 

@@ -103,4 +103,20 @@ Never sync the whole `.codex` directory. Never commit auth files, sessions, logs
 
 ## Third-Party Skill Updates
 
-Only the primary update device should follow third-party upstreams listed in `third-party-skills.toml`. Other devices should pull the shared repo and should not independently update third-party upstreams. User-maintained skills require explicit user confirmation before commit or push.
+Only the primary update device should follow third-party upstreams listed in `third-party-skills.toml`. Other devices should pull the shared repo and should not independently update third-party upstreams. Completed, validated user-maintained skill changes within the authorized task scope must be committed and pushed without additional confirmation; stage only current-task files and preserve unrelated work.
+
+## Install The Multi-Device Management Policy
+
+Read `../../scripts/SKILL-MANAGEMENT.md`. For an already linked checkout, do not
+rerun the import bootstrap: run `python scripts/install-device-policy.py --device
+DEVICE-PREFIX` from the repo (use python3 on Linux). This preserves existing
+global instructions, adds the skill-maintenance rule, and records local device
+identity. It does not register schedules or grant permissions.
+
+Use the app scheduler to install or update one daily pull on every accessible
+device and one daily upstream update on the registered primary device only.
+Use the prompts under `../../scripts/prompts/`; verify permissions and a manual
+run. Keep the pull at 09:00 local time and the primary update at 08:30 local time.
+Do not claim remote-device setup from publishing files. Report inaccessible
+devices and permission blockers explicitly. Do not copy whole global AGENTS.md,
+config.toml, credentials, runtime state, or device identity between computers.
