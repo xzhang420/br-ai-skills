@@ -27,9 +27,18 @@ hash, and edits invalidate it. User scientific acceptance is a separate explicit
 decision after validation. Never use an approval command to approve on behalf of
 the user without authorization. See `--help` for each state operation.
 
-Before asking for either decision, present the [human review brief](human-review.md)
-in chat. A plain-language reply approving the presented version is sufficient;
-the coordinator runs the state command and records the actual user decision.
+Before every required human review or decision, use the
+[visual review standard](human-review.md): summary and highlighted decision in
+chat, a useful rendered visual in substantive review documents, and linked
+technical evidence. It covers approval, revisions, validation/acceptance,
+provider/data/cost choices and blockers. Inspect each rendered page/figure and
+verify its scientific correspondence. Do not create a new pause for formatting.
+A plain-language reply approving the presented version is sufficient; the
+coordinator runs the state command and records the actual user decision.
+Keep presentation versions separate from frozen scientific requirements:
+restyling a brief does not require re-recording planning or re-freezing, and must
+not change scope or invalidate a valid approval. Preserve exact source links and
+the specification hash while checking the summary for semantic drift.
 Reopening a valid, unchanged frozen/approved plan does not require new approval.
 Keep the frozen specification immutable during routine implementation and repair;
 a changed specification or invalidated planning evidence must be recorded,

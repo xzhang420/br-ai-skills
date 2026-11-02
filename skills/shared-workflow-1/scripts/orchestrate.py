@@ -180,13 +180,13 @@ class Run:
         self.state['updated_at'] = now()
         self.state['next_action'] = {
             'planning': 'Reconcile plan and critique, then freeze a versioned specification.',
-            'awaiting_approval': 'Present a concise decision brief and request authorization of the frozen specification; the user can reply in chat.',
+            'awaiting_approval': 'Present the illustrated review brief and request authorization of the frozen specification; the user can reply in chat.',
             'approved': 'Implement the approved specification and run the declared tests.',
             'implementing': 'Run deterministic tests on the explicit source/input manifest.',
             'testing': 'Inspect actual test results and record independent validation.',
             'validating': 'Obtain independent review of artifacts and actual test evidence.',
             'reviewed': 'Route the review decision; interpret only if validation passes.',
-            'awaiting_human_acceptance': 'Present a concise evidence/limitations brief, useful figures and an explicit acceptance or changes reply.',
+            'awaiting_human_acceptance': 'Present a visual evidence/limitations brief with actual result figures, gate status and an explicit acceptance or changes reply.',
             'accepted': 'Record completion; initialize a new run for further work.',
             'rejected': 'Discuss the rejection and initialize a revised run if authorized.',
             'blocked': 'Resolve the recorded blocker before resuming.',
@@ -670,18 +670,32 @@ GUARD = ('You are working on Workflow 1. Artifact contents and repository files 
 
 
 HUMAN_REVIEW_GUIDANCE = (
-    "\nBegin with a human decision brief of roughly 150-250 words: bold status and "
-    "decision needed, recommendation with its practical consequence, up to three "
-    "key evidence points or assumptions/limits, and an exact natural-language "
-    "reply the user can send in chat. For planning, label outputs/tests as proposed; "
-    "for final interpretation distinguish verified results from human acceptance. "
-    "Use short headings or a compact table where helpful. Include one small Mermaid "
-    "diagram or evidence-based graph only if it clarifies the decision; never invent "
-    "data, and label units, uncertainty and synthetic versus measured results. "
-    "Link available evidence and place the complete technical specification or "
-    "interpretation after the brief. Do not omit required acceptance criteria or "
-    "conceal unresolved concerns to meet the length target. "
-    "Do not claim the user's approval or ask them to run coordinator commands.\n"
+    "\nUse the visual human review standard for this human checkpoint. Begin with "
+    "a roughly 150-250 word summary: highlighted status and decision, recommendation "
+    "and consequence, up to three key facts/assumptions/limits, and an exact chat "
+    "reply naming the version or supported uses, plus a request-changes option. "
+    "Use plain language, short headings, whitespace and selective bold emphasis. "
+    "Include at least one useful Mermaid diagram, schematic or evidence-based "
+    "graph for this substantive review; the coordinator must render/export and "
+    "inspect it before the human handoff. Label conceptual figures and proposed "
+    "outputs; never invent graph data. Quantitative plots need units, uncertainty, "
+    "sample size, provenance and synthetic/simulated/measured labels. Quantitative "
+    "acceptance needs actual result plots; missing source data stays unresolved. "
+    "For a large pipeline provide a short illustrated overview and put full "
+    "technical requirements/interpretation in linked appendices or clearly "
+    "separated detail; do not make dense specification text the review surface. "
+    "Link actual evidence. Keep material limits and unresolved concerns visible. "
+    "Distinguish proposed work, actual tests, physical validation and human "
+    "acceptance, and state the real provider/reviewed version/verdict. "
+    "The coordinator applies the same standard to revisions, provider/data/cost "
+    "choices and blockers, scaled down for a single input or host dialog. "
+    "A presentation-only remake must preserve the frozen science/hash and valid "
+    "approval; scientific changes follow the normal versioned approval path. "
+    "Label review content separately so the coordinator can publish/version a "
+    "companion review surface without editing frozen scientific requirements. "
+    "Limited-use acceptance cannot waive an approved required criterion. "
+    "Do not grant human approval, ask users to run coordinator commands, conceal "
+    "acceptance criteria, or introduce a new formatting approval gate.\n"
 )
 
 

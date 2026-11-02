@@ -127,11 +127,19 @@ chat confirmation. Filesystem/network permissions and host approval review still
 apply. Check the working folder and available access before starting writes;
 reuse existing permissions and provider authorization within their scope.
 
-Present a short [decision brief](references/human-review.md) when input or
-scientific approval is needed: status, recommendation, key evidence/assumptions,
-an exact natural-language reply, and links to details. Use a compact diagram,
-table or measured-data plot only when it improves the decision. The coordinator
-records the user's chat reply; users do not need to run workflow commands.
+Use the [visual human review standard](references/human-review.md) at every
+human review, validation, approval or acceptance checkpoint, including revisions,
+provider choices and blockers. Lead with a short summary, highlighted decision
+and key points, a useful rendered diagram/figure for substantive decisions, and
+an exact reply. Large plans get an illustrated overview with linked technical
+appendices; a long specification is not the primary review surface. Show the
+brief in chat and inspect the actual rendered document. Schematics explain
+planned work; quantitative result graphs require real source data. A single
+missing value or host dialog stays concise. Presentation-only remakes preserve
+the scientific freeze/approval; the coordinator records the user's chat reply.
+The CLI drafts review/diagram content; the coordinator renders the companion
+review, inspects it and reports that evidence. A frozen text report or state
+transition alone does not attest visual QA.
 
 Approval covers implementation, declared tests, authorized independent review
 and bounded repairs. New methodology or a changed frozen specification requires

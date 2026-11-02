@@ -77,12 +77,18 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
   continue through tests, authorized independent review and up to two repair
   rounds. A methodological change returns to planning. Honor explicit user
   instructions about approval; never infer approval from silence.
-- Before any human input/approval request or scientific handoff, read
-  [human review](references/human-review.md). Present a short, readable decision
-  brief in chat, link the full evidence and give an exact reply the user can send.
-  Identify whether the pause comes from a scientific decision, missing input,
-  host permission or runtime selection; cite the specific requirement when a
-  rule causes the pause. Do not make the user interpret raw state JSON.
+- At every human review, validation, approval or acceptance checkpoint, read
+  [human review](references/human-review.md). Use its visual review standard:
+  a short summary first, highlighted decision/status and key points, a relevant
+  rendered figure or diagram for every substantive decision, and linked technical
+  detail. This also covers revisions, provider/data/cost choices and blockers;
+  do not make a long specification or a file list the primary review surface.
+  Show the brief in chat, link the illustrated review document and give an exact
+  reply. Identify why input is required and cite the requirement when a rule
+  causes the pause. Check the actual rendered handoff before presenting it.
+  Presentation-only revisions preserve the frozen scientific approval object;
+  scientific changes require the normal versioned review. Never invent results
+  to fill a graph or add a new approval gate solely for document formatting.
 
 ## Four stages
 
