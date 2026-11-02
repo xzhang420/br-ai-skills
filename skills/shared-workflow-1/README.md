@@ -1,9 +1,11 @@
 # Workflow 1
 
 A skill-first scientific workflow: Astra plans/interprets, Sol implements,
-Terra optionally checks figures, Claude independently critiques/reviews, and
-Gemini optionally researches public literature. Native OpenAI fallback review
-is labeled explicitly. Human scientific acceptance remains separate.
+Terra optionally checks figures, Claude critiques/reviews **by default**, and
+Gemini optionally researches public literature. This default applies with native
+Codex orchestration too. OpenAI replacement review requires the user's explicit
+fallback choice or opt-out; it is labeled honestly. Human scientific acceptance
+remains separate.
 
 The folder `shared-workflow-1` is the canonical workflow shared across devices. The
 frontmatter name `workflow-1` preserves the requested `$workflow-1` invocation.
@@ -135,7 +137,16 @@ Approval covers implementation, declared tests, authorized independent review
 and bounded repairs. New methodology or a changed frozen specification requires
 renewed authorization; final scientific acceptance remains a separate decision.
 
-## Optional cross-provider coordinator
+## Claude participation and optional CLI coordinator
+
+The helper is optional; Claude's default planning-critic and independent-reviewer
+roles are not. Follow the [readiness and scope procedure](references/agents.md#default-claude-review-and-readiness)
+before completing either review stage. Check the configured CLI and authentication,
+then use an actual authorized review to establish model access. If unpublished
+artifact scope is unresolved, prepare a minimal packet and ask one focused
+question early. Keep the Claude review pending while native preparation continues;
+do not turn that uncertainty into an automatic GPT fallback. Reuse valid provider,
+data and cost authorization, including revisions/stages only when covered.
 
 Claude Code must be installed and authenticated separately. Run `claude auth login`
 and `claude auth status` locally if needed. The coordinator requests the pinned
@@ -186,8 +197,16 @@ Astra prepares interpretation and the workflow waits for human acceptance.
 Only after the user's decision use `accept --run ... --decision accept|reject
 --reason 'the user decision and rationale'`. This is a recorded human decision,
 not an automatic reviewer vote or an authentication mechanism.
-`--reviewer codex` deliberately selects the labeled OpenAI fallback; no automatic
-provider substitution occurs.
+`--reviewer` defaults to `claude` for both `plan` and `execute`, even when
+omitted. `--allow-external` is still required and asserts actual authorization;
+the default does not grant data access. `--reviewer codex` deliberately selects
+the labeled OpenAI fallback only after the user chooses it. A verified Claude
+blocker is reported for a resolve-or-fallback decision; it never triggers an
+automatic provider switch. Extra native critique is useful but does not fulfill
+a still-pending default Claude review.
+
+Report the version Claude actually reviewed and its actual verdict. A subsequent
+native reconciliation is not a new Claude review or a Claude PASS.
 
 For Gemini Deep Research use a separate environment **outside this repository**:
 

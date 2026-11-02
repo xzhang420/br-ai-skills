@@ -133,6 +133,41 @@ class WorkflowTests(unittest.TestCase):
                 provider.preflight()
             args.reviewer = 'codex'
             provider.preflight()
+    def test_cli_default_claude_does_not_grant_external_consent(self):
+        commands = [
+            ['plan', '--run', str(self.run.path)],
+            ['execute', '--run', str(self.run.path), '--test', 'python -m unittest',
+             '--artifact', 'answer.py'],
+        ]
+        for command in commands:
+            with self.subTest(command=command[0]):
+                args = w.parser().parse_args(command)
+                self.assertEqual(args.reviewer, 'claude')
+                self.assertFalse(args.allow_external)
+                provider = w.Providers(self.run, args)
+                with mock.patch.object(w.shutil, 'which', return_value='/bin/stub'), \
+                     mock.patch.object(w, 'command') as call:
+                    with self.assertRaisesRegex(w.WorkflowError, 'allow-external'):
+                        provider.preflight()
+                    call.assert_not_called()
+
+    def test_default_reviewer_participates_in_plan_and_validation(self):
+        args = w.parser().parse_args(['plan', '--run', str(self.run.path)])
+        planning = Fake(['plan', 'critique', 'specification'], reviewer=args.reviewer)
+        w.plan(self.run, planning)
+        self.assertEqual([role for role, _, _ in planning.prompts],
+                         ['astra', 'claude', 'astra'])
+        self.assertEqual(self.run.state['state'], 'awaiting_approval')
+        self.run.approve()  # Synthetic test fixture only, never a live user decision.
+        args = w.parser().parse_args(['execute', '--run', str(self.run.path),
+                                     '--test', 'python -m unittest', '--artifact', 'answer.py'])
+        execution = Fake(['implementation', PASS_VALIDATION, 'DECISION: PASS',
+                          'Interpretation'], reviewer=args.reviewer)
+        w.execute(self.run, execution)
+        self.assertEqual([role for role, _, _ in execution.prompts],
+                         ['sol', 'sol', 'claude', 'astra'])
+        self.assertEqual(self.run.state['state'], 'awaiting_human_acceptance')
+
     def test_external_and_research_consent(self):
         args = types.SimpleNamespace(reviewer='claude', allow_external=False, allow_research_cost=False, research=False, env_file=None)
         provider = w.Providers(self.run, args)

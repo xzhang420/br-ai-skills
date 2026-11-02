@@ -9,6 +9,12 @@ Record native outputs using `record --phase ... --file ...`, giving requested
 model/effort and observed identity only where actually verified. `--source native`
 means an actual native agent supplied it; `manual` is human/coordinator material.
 Keep test logs and scientific products in the project, not the shared skill.
+Claude is the default critic/reviewer in native and CLI runs. Before a review
+handoff, record either its real result or the user's explicit fallback choice;
+untested availability or missing consent leaves that review pending. Preserve
+reviewed version/hashes, artifact scope and provider-returned metadata. A native
+reconciliation of Claude feedback does not replace its verdict or certify that
+Claude reviewed the revised version. See [provider readiness](agents.md#default-claude-review-and-readiness).
 Native independent review uses `DECISION: PASS|REVISE|REPLAN|BLOCKED` in review.md;
 validation.md uses `VERDICT: PASS|REVISE|BLOCKED` plus real TEST_COMMAND and
 TEST_EXIT_CODE lines. Those reports do not replace the deterministic `test` helper.

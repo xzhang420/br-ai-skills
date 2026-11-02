@@ -1,6 +1,6 @@
 ---
 name: workflow-1
-description: "Use Workflow 1 for multi-agent scientific planning, implementation, independent validation, and human scientific acceptance. Recognizes lower/higher efforts and persists the selected mode for follow-ups in the same workflow."
+description: "Use Workflow 1 for multi-agent scientific planning, implementation, Claude critique/review by default, and human scientific acceptance. Recognizes lower/higher efforts and persists the selected mode for follow-ups in the same workflow."
 ---
 
 # Multi-Agent Workflow 1
@@ -37,6 +37,26 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
   Record real participants, input/output paths, commands and exits, objections,
   uncertainties, decisions, and next action. Mark unverified settings honestly.
 
+## Claude participation by default
+
+- Claude Opus is the default planning critic and the default fresh independent
+  validation reviewer, including when native Codex agents coordinate the work.
+  The optional CLI coordinator does not make Claude participation optional.
+- Follow [agents](references/agents.md) early: check actual CLI/auth readiness,
+  reuse valid provider/data/cost authorization, and prepare a minimal review
+  packet. If sharing scope is missing, ask one focused question before the
+  review handoff; keep Claude pending while independent preparation continues.
+  Untested availability or unresolved consent is not a reason to substitute GPT.
+- Use Sol as a replacement only when the user explicitly chooses the fallback
+  or opts out of Claude, including after a verified blocker is explained. Reuse
+  that choice within its scope. Extra native criticism can proceed without
+  satisfying or replacing a pending Claude review.
+- Before presenting a review stage as complete, obtain the actual Claude result
+  or record the user's fallback choice. Report the real provider, reviewed
+  version/scope and verdict; never relabel a native check or a revised version
+  as Claude-reviewed. Provider selection does not authorize unrestricted data
+  sharing, new billing or bypassing host permissions.
+
 ## Computer actions and human decisions
 
 - Carry forward the user's authorization within its original scope. Proceed with
@@ -69,9 +89,9 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
 1. **Plan — Astra.** Define objective, assumptions, evidence, dimensional and
    statistical checks, deliverables and measurable acceptance criteria. Seek
    independent criticism, preferably before presenting a preferred conclusion.
-   Claude Opus is the external critic when available and authorized. Otherwise
-   disclose the native Sol fallback. Gemini literature research is optional and
-   needs explicit cost/data authorization. Reconcile material objections with
+   Obtain the default Claude Opus critique, or the user's explicit native
+   fallback choice under the participation rule above. Gemini literature research
+   is optional and needs explicit cost/data authorization. Reconcile objections with
    evidence or tests, then freeze a versioned specification. Agent agreement
    is not evidence. Resolve or surface methodological objections before coding.
    Present the specification's decision brief; record the user's authorization
@@ -83,9 +103,10 @@ Read [effort-levels](references/effort-levels.md) before selecting agents and
    plots/images when useful. Preserve inputs, provenance, and reproducibility.
    Run preliminary tests. Never let agents concurrently edit the same files.
 3. **Validate — tests plus independent review.** Read actual code, outputs and
-   test evidence. Prefer a fresh Claude review if authorized; otherwise disclose
-   `w1_reviewer_lower/higher` as OpenAI fallback. Technical failure returns to
-   implementation, invalid assumptions to planning, insufficient evidence to an
+   test evidence. Obtain a fresh Claude review by default; use
+   `w1_reviewer_lower/higher` as replacement only under the explicit fallback
+   rule above. Technical failure returns to implementation, invalid assumptions
+   to planning, insufficient evidence to an
    unresolved status. Preserve valid surprising/null/negative results. Limit
    repairs to two rounds and surface unresolved methodological disputes.
 4. **Scientific acceptance — Astra, then user.** Separate verified computation
@@ -105,8 +126,10 @@ and [README](README.md) for installation and executable coordinator examples.
   restricted/unpublished data, publishing or deployment. Existing explicit
   authorization remains valid within its scope.
 - A provider login does not authorize sending arbitrary project content.
-  Use only approved public/synthetic artifacts for external calls. Record their
-  scope. Do not send credentials or raw confidential data to review agents.
+  Use an approved minimal public/synthetic packet, or specifically authorized
+  unpublished excerpts/derived artifacts. Record exact scope and reuse valid
+  consent; do not infer approval for the entire source folder. Credentials and
+  raw confidential measurements stay out of review packets.
 - Runtime logs, run outputs, environments, credentials and backups stay outside
   the skills repository. Never commit them.
 - LumaCam: reduction reconstructs raw detector data; processing corrects images;
