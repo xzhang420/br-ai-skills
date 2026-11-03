@@ -1,15 +1,13 @@
-# Third-party Codex skills mirrored into this repo.
-# The daily primary-device update automation reads this file, checks upstreams, and reports
-# candidate updates. Third-party entries may be auto-applied and pushed only by the primary update device when all guardrails pass.
+# Historical author-source inventory retained for migration and review.
+# Skills Manager owns live source metadata. Old preserve_rules describe local
+# adaptations; they no longer authorize an automatic upstream-update job.
 
-primary_update_device = "personal"
-third_party_update_policy = "primary-device-auto-apply-and-push"
-# Automatically commit and push completed, validated user-maintained skill changes
-# within the authorized task scope; no additional confirmation is required.
-# Stage only current-task files and preserve unrelated local changes.
-# This does not expand device ownership or permission to edit other skill folders.
-own_skill_update_policy = "auto-commit-and-push-within-authorized-task-scope"
-other_device_policy = "pull-shared-repo-only"
+primary_update_device = "workstation"
+third_party_update_policy = "skills-manager-daily-check-manual-review"
+# Skills Manager backs up saved changes; this is not a validated-release gate.
+# Prefixes are retained as labels, not device ownership restrictions.
+own_skill_update_policy = "skills-manager-background-backup"
+other_device_policy = "skills-manager-backup-sync"
 
 [[skills]]
 name = "agent-reach"

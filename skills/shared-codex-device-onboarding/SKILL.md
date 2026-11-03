@@ -1,122 +1,55 @@
 ---
 name: shared-codex-device-onboarding
-description: Use when the user says they have a new computer/device, asks how to synchronize Codex skills or settings across computers, asks to set up Codex on another Windows/Linux/Ubuntu machine, or asks to automate future Codex skill sync setup. Provides the shared br-ai-skills bootstrap workflow and device-prefix ownership rules.
+description: Set up Skills Manager on another Windows, Linux, or macOS device and restore the shared skill library without losing local skills. Use for multi-device skill onboarding and synchronization setup.
 ---
 
-# Shared Codex Device Onboarding
+# Skills Manager device onboarding
 
-Use this skill when adding a new computer to the user's Codex skills/settings sync setup.
+The user replaced the br-ai-skills Git-script policy on 2026-11-03. Do not
+reinstall its daily pull jobs, automatic upstream-update job, or device-prefix
+ownership restrictions. Prefixes remain labels; renaming is unnecessary.
 
-## Source Of Truth
+## Current arrangement
 
-The shared private repo is the source of truth for user-maintained skills. Codex-managed system skills under `skills/.system/` are local runtime state and should not be committed. The repo is:
+- Official app: https://github.com/xingkongliang/skills-manager
+- Private backup: https://github.com/xzhang420/skills-manager-backup
+- Default library: ~/.skills-manager/skills/ on each device.
+- Workstation checks author sources daily (24h).
+- Apply updates automatically: OFF (notify only).
+- Other devices restore the same backup; author checks can stay Off there.
+- Background backup may publish saved edits before a larger task finishes.
+  Backup synchronization and downloading new author versions are separate.
 
-```text
-https://github.com/xzhang420/br-ai-skills
-```
+## Onboard
 
-Preferred local paths:
+1. Inventory existing skills, links, local edits, and old schedules. Back up
+   local-only skills and global instructions before changing discovery paths.
+2. Install an official OS release and verify published checksums. Use this
+   device's own authentication; never transfer tokens or SQLite databases.
+3. Restore the private backup through the Backup page or supported CLI. Do not
+   import br-ai-skills as a second backup remote.
+4. Compare restored content with local-only or different skills. Review before
+   replacement; do not force an overwrite or silently discard differences.
+5. Deploy library skills to Codex with Skills Manager. Preserve .system and
+   plugin/runtime content outside the synchronized library. Preserve required
+   compatibility paths until dependent chats and scripts have been checked.
+6. Verify discovery and a backup round. Background jobs require the app running;
+   use tray behavior and OS-supported sign-in startup when authorized.
+7. Pause old skill-pull and author-update jobs through the device's scheduler.
+   Replace only the old skill-maintenance block in global AGENTS.md; keep
+   unrelated project-location and scientific-workflow instructions.
 
-```text
-Windows: %USERPROFILE%\dev\br-ai-skills
-Linux/Ubuntu: ~/dev/br-ai-skills
-```
+## Review author updates
 
-Codex should read skills through:
+Keep automatic application off. Review local customizations, licenses, new
+dependencies and permissions before asking to apply an update. Same-named files
+can be overwritten by author updates. Backups do not establish update safety.
 
-```text
-Windows: %USERPROFILE%\.codex\skills
-Linux/Ubuntu: ~/.codex/skills
-```
+Use the current CLI help or manage-skills skill for install/deploy/check actions.
+Do not edit the app database to bypass missing controls.
 
-That path should link to the repo's `skills` folder.
+## Completion
 
-## Device Prefixes
-
-Use top-level skill folders only.
-
-Known devices:
-
-```text
-personal-*     personal computer
-workstation-*  workstation computer
-godzilla-*     Ubuntu/Linux computer
-shared-*       manually promoted cross-device skills
-```
-
-For any new computer, ask for or choose a lowercase device prefix, for example `travel-laptop`, then use skill folders named `skills/travel-laptop-*`.
-
-## Bootstrap A Future Computer
-
-First make sure Git is installed.
-
-Windows:
-
-```powershell
-New-Item -ItemType Directory -Path "$env:USERPROFILE\dev" -Force
-git clone https://github.com/xzhang420/br-ai-skills.git "$env:USERPROFILE\dev\br-ai-skills"
-cd "$env:USERPROFILE\dev\br-ai-skills"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1 -DevicePrefix DEVICE-PREFIX
-```
-
-Linux/Ubuntu:
-
-```bash
-mkdir -p ~/dev
-git clone https://github.com/xzhang420/br-ai-skills.git ~/dev/br-ai-skills
-cd ~/dev/br-ai-skills
-bash scripts/bootstrap-linux.sh DEVICE-PREFIX
-```
-
-Replace `DEVICE-PREFIX` with the chosen prefix.
-
-The bootstrap script:
-
-- pulls the latest repo
-- merges existing local user-maintained Codex skills into the repo without overwriting repo files, while skipping `.system`
-- backs up the old local skills folder
-- links `~/.codex/skills` or `%USERPROFILE%\.codex\skills` to the repo
-- commits and pushes imported skills
-- prints the ownership line to add to that computer's biweekly workflow-review automation prompt
-
-If push fails, guide the user through GitHub authentication (`gh auth login` or Git Credential Manager), then rerun the script.
-
-## Automation Prompt Line
-
-After bootstrap, add this to that computer's biweekly workflow-review automation prompt:
-
-```text
-This computer is DEVICE-PREFIX. It owns skill folders whose names start with skills/DEVICE-PREFIX-. When creating or editing skills from this device's workflow review, only create or edit skills with that prefix unless the user explicitly approves editing another folder.
-```
-
-Also include:
-
-```text
-Before changing skills, run git pull --rebase --autostash in the shared br-ai-skills repo. After creating or editing skills, stage only portable files and exclude skills/.system, commit with a concise message, run git pull --rebase, and push. If there is a conflict or authentication failure, stop and report it. Never force-push.
-```
-
-## Safety
-
-Register mirrored third-party skills in `third-party-skills.toml`. A GitHub repository URL is enough when the skill lives at the repository root; add notes or preserve rules when only a subdirectory should be synced or local cleanup is required.
-
-Never sync the whole `.codex` directory. Never commit auth files, sessions, logs, SQLite state files, caches, sandbox files, plugin caches, local backups, or `skills/.system/`.
-
-## Third-Party Skill Updates
-
-Only the primary update device should follow third-party upstreams listed in `third-party-skills.toml`. Other devices should pull the shared repo and should not independently update third-party upstreams. Completed, validated user-maintained skill changes within the authorized task scope must be committed and pushed without additional confirmation; stage only current-task files and preserve unrelated work.
-
-## Install The Multi-Device Management Policy
-
-Read `../../scripts/SKILL-MANAGEMENT.md`. For an already linked checkout, do not
-rerun the import bootstrap: run `python scripts/install-device-policy.py --device
-DEVICE-PREFIX` from the repo (use python3 on Linux). This preserves existing
-global instructions, adds the skill-maintenance rule, and records local device
-identity. It does not register schedules or grant permissions.
-
-Use the app scheduler to install or update one daily pull on every accessible
-device and one daily upstream update on the registered primary device only.
-Use the prompts under `../../scripts/prompts/`; verify permissions and a manual
-run. Keep the pull at 09:00 local time and the primary update at 08:30 local time.
-Do not claim remote-device setup from publishing files. Report inaccessible
-devices and permission blockers explicitly. Do not copy whole global AGENTS.md,
-config.toml, credentials, runtime state, or device identity between computers.
+Report version, library count, deployment path, backup result, check/apply
+settings, paused old jobs, and manual steps. Never claim another device is
+configured merely because a guide or repository was published.

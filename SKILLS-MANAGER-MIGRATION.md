@@ -1,0 +1,80 @@
+# Skills Manager: multi-device setup
+
+User decision: 2026-11-03. Replace the old scripts and device-ownership rules
+with Skills Manager. Keep old names; they are labels, not access restrictions.
+
+## New arrangement
+
+- Library: `~/.skills-manager/skills/` (Windows: `%USERPROFILE%\.skills-manager\skills`).
+- Private backup: https://github.com/xzhang420/skills-manager-backup
+- Workstation is the designated author-update checker: Daily / 24 hours.
+- **Apply updates automatically: Off (notify only).** Review before applying.
+- Other devices: use the same backup; leave author checks Off to avoid duplicate work.
+- Cross-device backup runs in the app independently of author-update checks.
+  Saved unfinished edits may be backed up. This is not a validated-release gate.
+- In version 1.43.3, backup/sync runs at startup and after local changes settle
+  (about two minutes), not as a continuous remote poll while idle. When switching
+  to an already-running device, use Backup > Back Up Again to refresh it.
+- The app must be running and online. Minimize to tray. This workstation has a
+  Windows sign-in shortcut; configure startup separately on the other devices.
+- This old br-ai-skills checkout is retained for recovery, not live editing.
+- Codex-managed .system/plugin/runtime content is not part of the new backup.
+
+## Personal PC (Windows)
+
+1. Save open skill edits. Back up any local-only skills before migration.
+2. Install the current Windows release from
+   https://github.com/xingkongliang/skills-manager/releases/latest
+3. Open Skills Manager. Choose **restore from a backup**, using:
+   `https://github.com/xzhang420/skills-manager-backup.git`.
+   Authenticate with your own GitHub account on this device when prompted.
+   Do not create another backup repository or import br-ai-skills as the remote.
+4. Compare the restored library with local skills. Retain/review local differences.
+5. In Global Workspace, deploy the library to Codex. If an existing folder/link
+   blocks deployment, back it up and migrate it; never click through an uncertain
+   overwrite. Preserve local system/runtime skills outside the backup library.
+6. Settings: author checks Off; automatic application Off. Leave Automatic backup
+   and Skill-aware sync merge ON. Use Minimize to tray and launch after sign-in
+   (add the installed app to Windows Startup if desired). Name the device personal.
+7. Confirm the Backup page reaches an up-to-date state and Codex discovers skills.
+8. Pause the old daily skill-pull and daily third-party-update tasks on this PC.
+   Replace the old br-ai-skills maintenance block in global AGENTS.md with the
+   policy below. Keep unrelated instructions unchanged.
+
+## Godzilla (Ubuntu/Linux)
+
+Follow the same restore/deploy/verification steps with the matching official
+Linux release (.deb for Debian/Ubuntu, AppImage where suitable). Preserve local
+godzilla-* differences before replacing old links. Use the device's own GitHub
+authentication. Author checks and automatic application remain Off here.
+Leave Automatic backup and Skill-aware sync merge ON. Name the device godzilla;
+add the installed app to your desktop session's Startup Applications if desired.
+Pause old skill-sync schedules only after verifying the restored library.
+Do not copy Windows paths, credentials, or the Windows app database to Linux.
+
+## Policy for migrated devices
+
+Skills Manager is the live skill library and backup/sync manager. Use its
+supported app/CLI for installation, source metadata, deployment, and backup.
+Edit user-maintained content in its canonical library, not the historical
+br-ai-skills checkout. Keep automatic author updates OFF; review and obtain user
+approval before applying. Prefixes are labels, not device ownership gates.
+Never sync credentials, full .codex state, system skills, plugins, or caches.
+Do not reinstall the old Git-script schedules or auto-commit policy.
+
+## Reviewing a third-party update
+
+On workstation, open the Library's available update, inspect the diff and local
+adaptations, then apply only after approval. Same-named files can be overwritten;
+the app's removed-file warning does not protect those edits. Preserve licensing
+and review new scripts, dependencies, permissions, and changed behavior.
+Check Backup after applying so approved content reaches the other devices.
+
+## Recovery
+
+The old checkout and GitHub history remain. A pre-migration Git bundle and global
+instruction backup were saved on workstation under
+`C:\Users\zhang_x3\.codex\backups\skills-manager-migration-20261103`.
+Do not run both old and new synchronization against the same live library.
+Keep the old checkout on workstation: local system/runtime links still use it.
+Other-device setup is not complete merely because this guide is available.

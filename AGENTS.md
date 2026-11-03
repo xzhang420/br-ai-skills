@@ -1,33 +1,18 @@
-## Codex Skill Ownership
+# Skills Manager migration
 
-This repository is the shared source of truth for user-maintained Codex skills across the user's devices. Codex-managed system skills under `skills/.system/` are local runtime state and must not be committed.
+The user retired the custom Git-script and device-ownership policy on 2026-11-03.
+Skills Manager replaces it for live skill management and cross-device sync.
+This checkout remains migration history and recovery material, not a second
+automatic writer to the live library. Read SKILLS-MANAGER-MIGRATION.md.
 
-Use top-level skill folders only. Do not create nested skill roots such as `skills/device/personal/foo`. Register mirrored third-party skills in `third-party-skills.toml` with their upstream URL and local preserve rules. When several local skills come from one upstream repository, prefer one collection entry over repetitive per-skill entries.
-
-Device-owned skill prefixes:
-
-- `skills/personal-*`: skills created or maintained from the personal computer.
-- `skills/workstation-*`: skills created or maintained from the workstation computer.
-- `skills/godzilla-*`: skills created or maintained from the godzilla computer.
-- `skills/shared-*`: manually promoted skills intended to be generally useful on every device.
-
-When creating or editing skills from an automated workflow review, only create or edit skill folders owned by the current device prefix unless the user explicitly approves editing another folder.
-
-Before changing skills, run `git pull --rebase --autostash` in this repo.
-
-This preparation rule applies to interactive authorized editing, not scheduled
-maintenance. Daily pulls must use the guarded sync script without rebase or
-autostash. Third-party scheduled updates must start with the same clean-tree
-guard. See `scripts/SKILL-MANAGEMENT.md` and `scripts/prompts/`.
-
-After changing skills, stage only portable files such as `skills`, `config.toml`, `AGENTS.md`, scripts, `.gitignore`, and `third-party-skills.toml`, while excluding `skills/.system/`; commit with a concise message; run `git pull --rebase`; then push.
-
-If there is a merge conflict, authentication failure, or uncertainty about overwriting a skill, stop and report it. Never force-push.
-
-Before ending a skill-edit task, report validation, commit hash, push result,
-and remaining working-tree changes or blockers. "Automatic" means after a
-completed, validated task, not every file save and not unrelated edits.
-
-Never stage or commit Codex auth files, sessions, logs, SQLite state files, caches, sandbox files, plugin caches, local backups, or `skills/.system/`.
-
-Third-party skills listed in `third-party-skills.toml` are maintained by the primary update device. That automation may update only registered third-party entries, validate the result, commit, and push. For user-maintained skills under `personal-*`, `workstation-*`, `godzilla-*`, and `shared-*`, automatically commit and push completed, validated changes within the authorized task scope; no additional confirmation is required. Stage only files belonging to the current task and preserve unrelated local changes. This authorization does not expand device ownership or permission to edit other skill folders. Other devices should pull this shared repo rather than updating third-party upstreams directly.
+- Do not run legacy bootstrap, policy installers, pull schedules, or automatic
+  upstream-update prompts as the normal workflow.
+- Work in the Skills Manager library on migrated devices. Existing personal-,
+  workstation-, godzilla-, and shared- prefixes are labels, not edit restrictions.
+- Check authors daily on workstation, with automatic application OFF. Review
+  differences and obtain user approval before applying third-party updates.
+- Preserve licenses and local adaptations during review. Never synchronize
+  auth, sessions, logs, databases, caches, plugins, or system/runtime skills.
+- Do not copy the entire .codex directory or overwrite unrelated local work.
+- For authorized maintenance of this historical checkout, stage only task files,
+  validate, commit and push. Never force-push. Report publication blockers.
