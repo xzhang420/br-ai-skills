@@ -7,8 +7,10 @@ automatic writer to the live library. Read SKILLS-MANAGER-MIGRATION.md.
 
 - Do not run legacy bootstrap, policy installers, pull schedules, or automatic
   upstream-update prompts as the normal workflow.
-- Work in the Skills Manager library on migrated devices. Existing personal-,
-  workstation-, godzilla-, and shared- prefixes are labels, not edit restrictions.
+- Work in the Skills Manager library on migrated devices. Read its DEVICE-SETUP.md
+  and codex-device-onboarding skill for the latest migration state. Device prefixes
+  were removed from live skill names on 2026-11-04; keep useful godzilla tags,
+  but do not recreate personal/workstation/shared tags or ownership restrictions.
 - Check authors daily on workstation, with automatic application OFF. Review
   differences and obtain user approval before applying third-party updates.
 - Preserve licenses and local adaptations during review. Never synchronize

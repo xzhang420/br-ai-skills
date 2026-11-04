@@ -12,4 +12,7 @@ and runtime folders, which are intentionally excluded from the new backup.
 
 Third-party author checks run daily on workstation while Skills Manager is
 running. Automatic application is OFF; review and approval are required.
-Other devices still need the setup steps in the guide.
+Personal PC migrated on 2026-11-04; its verified state and remaining legacy-job
+retirement step are recorded in the guide. Godzilla still needs its own setup
+and verification. On migrated devices, read the live library's `DEVICE-SETUP.md`
+for the latest shared plan.

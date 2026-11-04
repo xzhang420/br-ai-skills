@@ -1,10 +1,16 @@
-# Codex Skill Sync Bootstrap
+# Retired Codex Skill Sync Scripts
 
-Use these scripts when adding a new computer to the shared Codex skill repo.
+These scripts are recovery material. They are not the current onboarding or
+synchronization workflow. Use [Skills Manager device setup](../SKILLS-MANAGER-MIGRATION.md)
+and the live library's `DEVICE-SETUP.md` instead.
 
-For ongoing daily synchronization, single-device third-party updates, and
-persistent commit/push instructions, follow [SKILL-MANAGEMENT.md](SKILL-MANAGEMENT.md).
-Existing devices should use `install-device-policy.py`, not rerun the import bootstrap.
+Do not run the bootstrap, policy installer, or scheduled Git pulls on a migrated
+device. Do not restore device-prefix ownership rules or automatic upstream
+application. See [the replacement policy](SKILL-MANAGEMENT.md).
+
+The commands below document the old implementation for deliberate recovery
+only. They can replace discovery links, commit, and push; reading this document
+does not authorize running them.
 
 ## Windows
 
@@ -72,10 +78,9 @@ The script serializes its own runs with a local Git-directory lock. It rechecks
 the checkout after fetching; it cannot lock out every external editor or Git
 client, so avoid editing while a pull is running.
 
-Use the app's supported scheduler to run this script daily on each
-device that needs it. Local scheduled tasks need the computer on and the app
-running. Schedule registration is device-local, not installed by a Git pull.
-No startup trigger or background push is installed by this script.
+The retired workflow scheduled this script daily. Do not recreate that schedule;
+Skills Manager owns backup and synchronization on migrated devices. Existing
+legacy schedules must be retired as part of each device's migration.
 
 Test safeguards using disposable local repositories:
 
